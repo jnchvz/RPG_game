@@ -400,3 +400,94 @@ public class Game extends Canvas implements Runnable {
 	}
 }
 ```
+
+## Part 3 - RPG Game: Game Loop
+
+The while statement continually executes a block of statements while a particular condition is true. 
+Using this method at this point is important because it will allow us to run indefinitely 2 methods, one of them, in charge of giving us the updates of the game, and the other one, will be drawing the graphics of it.  
+
+So here, we will need to: 
+* Create a boolean that tell us if the game is running or not (initialized as false by default) using : private static boolean workingWell = false
+* Initialize it as true into the start method (before the second thread) and as false into the stop method, using: workingWell = true and workingWell = false
+* Create the while statement into the main method
+* Add the reserved word volatile into the boolean
+* Add the word synchronized into the 2 methods we are using: start and stop
+
+Using volatile variables reduces the risk of memory consistency errors, because any write to a volatile variable establishes a happens-before relationship with subsequent reads of that same variable. This means that changes to a volatile variable are always visible to other threads. What's more, it also means that when a thread reads a volatile variable, it sees not just the latest change to the volatile, but also the side effects of the code that led up the change.
+
+Source: https://docs.oracle.com/javase/tutorial/essential/concurrency/atomic.html
+
+* Use a try catch in order to stop our thread in the stop method, letting us to know if there's an error via the console and not showing the errors to the user.
+
+Why use join and not stop ? We use thread.join because if we were using thread.stop the program will terminate or end abruptly our thread. In the other hand, using join, it allow us to wait until everything is finished inside the thread and then stop.
+
+```java 
+package game;
+
+import java.awt.BorderLayout;
+import java.awt.Canvas;
+import java.awt.Dimension;
+
+import javax.swing.JFrame;
+
+public class Game extends Canvas implements Runnable {
+
+	private static final long serialVersionUID = 1L;
+
+	private static final int WIDTH = 800; // largeur de la fenetre
+	private static final int HEIGHT = 600; // hauteur de la fenetre
+
+	private static volatile boolean workingWell = false;
+
+	private static final String NAME = "Game";
+
+	private static JFrame window;
+	private static Thread thread;
+
+	private Game() {
+
+		setPreferredSize(new Dimension(WIDTH, HEIGHT));
+
+		window = new JFrame(NAME);
+		window.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+		window.setResizable(false);
+		window.setLayout(new BorderLayout());
+		window.add(this, BorderLayout.CENTER);
+		window.pack();
+		window.setLocationRelativeTo(null);
+		window.setVisible(true);
+	}
+
+	public static void main(String[] args) {
+		Game game = new Game();
+		game.start();
+	}
+
+	private synchronized void start() {
+		workingWell = true; // we put the boolean before creating the object
+							// thread to prevent bugs with the run method that
+							// use the thread too
+
+		thread = new Thread(this, "graphics");
+		thread.start();
+	}
+
+	private synchronized void stop() {
+		workingWell = false;
+
+		try {
+			thread.join();
+		} catch (InterruptedException e) {
+			e.printStackTrace();
+		}
+
+	}
+
+	public void run() {
+		// System.out.print("thread 2 is working");
+		while (workingWell) {
+
+		}
+	}
+}
+```
