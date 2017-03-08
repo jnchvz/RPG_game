@@ -324,3 +324,79 @@ public class Game extends Canvas {
 }
 ```
 
+## Part 2 - RPG Game: Multithreading
+
+Before we talk about multithreading, let’s discuss threads. 
+
+A thread is a light-weight smallest part of a process that can run concurrently with the other parts(other threads) of the same process. Threads are independent because they all have separate path of execution that’s the reason if an exception occurs in one thread, it doesn’t affect the execution of other threads. All threads of a process share the common memory. The process of executing multiple threads simultaneously is known as multithreading.
+
+Source: http://beginnersbook.com/2013/03/multithreading-in-java/
+
+Until now, we have been using the main thread. 
+
+When a Java program starts up, one thread begins running immediately. This is usually called the main thread, because it is the one that is executed when your program begins.
+
+But in the RPG Game we will need to use a second thread, in order to run automatically our game, draw its graphics, etc. So to achieve this, we will need to:
+
+* Create an interface in charge of running different threads using implements Runnable (which is an abstract method) and add the method run (this method will run our second thread)
+* We have to create the second thread, using private static Thread and giving the name thread to it
+* Define and initialize the thread using 2 methods: private void start() and private void stop() 
+* In the method start() we will initialize a new object thread = new Thread(this, "graphics") and then execute it using thread.start()
+* Initialize the method start() into the main using game.start()
+
+From this point, everything that is contained in the run method will be executed sequencially. 
+
+```java 
+package game;
+
+import java.awt.BorderLayout;
+import java.awt.Canvas;
+import java.awt.Dimension;
+
+import javax.swing.JFrame;
+
+public class Game extends Canvas implements Runnable {
+
+	private static final long serialVersionUID = 1L;
+
+	private static final int WIDTH = 800; // largeur de la fenetre
+	private static final int HEIGHT = 600; // hauteur de la fenetre
+
+	private static final String NAME = "Game";
+
+	private static JFrame window;
+	private static Thread thread;
+
+	private Game() {
+
+		setPreferredSize(new Dimension(WIDTH, HEIGHT));
+
+		window = new JFrame(NAME);
+		window.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+		window.setResizable(false);
+		window.setLayout(new BorderLayout());
+		window.add(this, BorderLayout.CENTER);
+		window.pack();
+		window.setLocationRelativeTo(null);
+		window.setVisible(true);
+	}
+
+	public static void main(String[] args) {
+		Game game = new Game();
+		game.start();
+	}
+
+	private void start() {
+		thread = new Thread(this, "graphics");
+		thread.start();
+	}
+
+	private void stop() {
+
+	}
+
+	public void run() {
+		System.out.print("thread 2 is working");
+	}
+}
+```
