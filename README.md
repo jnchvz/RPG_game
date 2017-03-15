@@ -491,3 +491,160 @@ public class Game extends Canvas implements Runnable {
 	}
 }
 ```
+
+## Part 4 - RPG Game: Timer and FPS counter
+We will start by creating 2 methods that will be in charge of controlling almost all the content of the game (variables and graphics):
+* private void update(), method in which we will put all the variables related with the life of the game characters, etc
+* private void showing(), method in which we will put all the necessary methods in order to show all the graphics
+
+Then, we need to include them into the method run (inside the while statement) which as we know, will run our second thread.
+
+Once we do that, we will need to create a timer. Why ? Because if we want the game to works uniformly in every computer, we should run these 2 methods (update and showing) at a specific number of times so we could be able to control it.
+
+In order to achieve this, we will need to use: 
+* The method System.nanoTime()
+
+The advantage of using this method is that it counts in nano seconds (taking the number of clock cycles processor CPU as reference) and it doesn't depend on the operating system but the microprocessor.
+
+1 Second = 1,000,000,000 Nanoseconds
+
+Having this in mind, we will create some variables in order to define :
+* The equivalent of nanoseconds per second, using final int NS_PER_SECOND = 1000000000;
+* The objective of the number of times we want to update per second, using final byte UPS_OBJECTIVE = 60;
+* Calculating how many nanoseconds we must need in every update, using final double NS_PER_UPDATE = NS_PER_SECOND / UPS_OBJECTIVE;
+
+NS= Nanoseconds
+
+UPS= Updates per second
+
+We use final because it means they won't change during the whole execution of the program, so it will starts in every start of the loop. Then, in order to give or atribute a number of nanoseconds given in a specific moment or instant, we will need to use:
+* long updateReference = System.nanoTime();
+
+In graphics programming, the term Delta is usually used for variably updating scenery based on the elapsed time since the game last updated. Source: https://en.wikipedia.org/wiki/Delta_timing
+
+We will:
+* Stock inside Delta, the result of dividing the time lapsed between the nanoseconds per update. And if it comply the condition (be superior or equal to 1) it will run the while statement. So, while Delta is = or superior to 1 it will update the game and then sustract 1 to delta. This means the game will update exactly 60 times per second.
+
+Once we have done all this, we will create:
+* an UPS counter
+* a FPS counter 
+* show them in the title of the window of the game
+
+So until now, the code looks like this : 
+
+```java 
+
+package game;
+
+import java.awt.BorderLayout;
+import java.awt.Canvas;
+import java.awt.Dimension;
+
+import javax.swing.JFrame;
+
+public class Game extends Canvas implements Runnable {
+
+	private static final long serialVersionUID = 1L;
+
+	private static final int WIDTH = 800; // largeur de la fenetre
+	private static final int HEIGHT = 600; // hauteur de la fenetre
+
+	private static volatile boolean workingWell = false;
+
+	private static final String NAME = "Game";
+
+	private static int ups = 0;
+	private static int fps = 0;
+
+	private static JFrame window;
+	private static Thread thread;
+
+	private Game() {
+
+		setPreferredSize(new Dimension(WIDTH, HEIGHT));
+
+		window = new JFrame(NAME);
+		window.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+		window.setResizable(false);
+		window.setLayout(new BorderLayout());
+		window.add(this, BorderLayout.CENTER);
+		window.pack();
+		window.setLocationRelativeTo(null);
+		window.setVisible(true);
+	}
+
+	public static void main(String[] args) {
+		Game game = new Game();
+		game.start();
+	}
+
+	private synchronized void start() {
+		workingWell = true; // we put the boolean before creating the object
+							// thread to prevent bugs with the run method that
+							// use the thread too
+
+		thread = new Thread(this, "graphics");
+		thread.start();
+	}
+
+	private synchronized void stop() {
+		workingWell = false;
+
+		try {
+			thread.join();
+		} catch (InterruptedException e) {
+			e.printStackTrace();
+		}
+
+	}
+
+	private void update() {
+		ups++;
+	}
+
+	private void showing() {
+		fps++;
+	}
+
+	public void run() {
+		// System.out.print("thread 2 is working");
+
+		final int NS_PER_SECOND = 1000000000;
+		final byte UPS_OBJECTIVE = 60;
+		final double NS_PER_UPDATE = NS_PER_SECOND / UPS_OBJECTIVE;
+
+		long updateReference = System.nanoTime();
+		long counterReference = System.nanoTime();
+
+		double timeLapsed;
+		double delta = 0;
+
+		while (workingWell) {
+			final long startLoop = System.nanoTime(); // initializing the
+														// chronometer
+
+			timeLapsed = startLoop - updateReference; // calculates the time
+														// lapsed between both
+														// system.nanoTimes
+			updateReference = startLoop;
+
+			delta += timeLapsed / NS_PER_UPDATE;
+
+			while (delta >= 1) {
+				update();
+				delta--; // equivalent to delta = delta - 1
+			}
+
+			showing();
+
+			if (System.nanoTime() - counterReference > NS_PER_SECOND) {
+				window.setTitle(NAME + " || APS:" + ups + " || FPS:" + fps);
+				ups = 0;
+				fps = 0;
+				counterReference = System.nanoTime();
+			}
+		}
+	}
+}
+
+```
