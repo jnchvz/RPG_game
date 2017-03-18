@@ -648,3 +648,61 @@ public class Game extends Canvas implements Runnable {
 }
 
 ```
+
+## Part 5 - RPG Game: Sprite Sheet
+
+A sprite is a single graphic image that is incorporated into a larger scene so that it appears to be part of the scene. Sprites are a popular way to create large, complex scenes as you can manipulate each sprite separately from the rest of the scene. This allows for greater control over how the scene is rendered, as well as over how the players can interact with the scene.
+
+It is not uncommon for games to have tens to hundreds of sprites. Loading each of these as an individual image would consume a lot of memory and processing power. To help manage sprites and avoid using so many images, many games use spritesheets. When you put many sprites into a single image, you get a spritesheet. Spritesheets are used to speed up the process of displaying images to the screen; It is much faster to fetch one image and display only a part of that image than it is to fetch many images and display them.
+
+Source:https://gamedevelopment.tutsplus.com/tutorials/an-introduction-to-spritesheet-animation--gamedev-13099
+
+So, in this part we will:
+* Create a new package called graphics and inside it, we are going to create a new class SpriteSheet
+* Use a collection (array) of pixels: public final int[] pixels
+* Create an image using a location path and getting the RGB of it
+
+Code will look like this : 
+
+```java 
+package graphics;
+
+import java.awt.image.BufferedImage;
+import java.io.IOException;
+
+import javax.imageio.ImageIO;
+
+public class SpriteSheet {
+	private final int width;
+	private final int height;
+	public final int[] pixels;
+
+	// constructor
+	public SpriteSheet(final String path, final int width, final int height) {
+		this.width = width; // this.width in reference to the variable width,
+							// and = width in reference to the temporal value
+							// from the constructor
+		this.height = height; // this.width in reference to the variable height,
+								// and = height in reference to the temporal
+								// value from the constructor
+
+		pixels = new int[width * height];
+
+		BufferedImage image;
+		try {
+			image = ImageIO.read(SpriteSheet.class.getResource(path));
+
+			image.getRGB(0, 0, width, height, pixels, 0, width); // start x,
+																	// start y ,
+																	// array,
+																	// offset,
+																	// scansize
+
+		} catch (IOException e) {
+			e.printStackTrace();
+		}
+
+	}
+}
+
+```
